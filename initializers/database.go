@@ -8,8 +8,10 @@ import (
 	"os"
 )
 
-var DB *gorm.DB
-var err error
+var (
+	DB  *gorm.DB
+	err error
+)
 
 func ConnectToDatabase() {
 	host := os.Getenv("host")
