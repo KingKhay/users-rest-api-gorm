@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"users-rest-api-gorm/controller"
 	"users-rest-api-gorm/initializers"
+	"users-rest-api-gorm/middleware"
 )
 
 func init() {
@@ -15,15 +17,23 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/users", controller.GetAllUsers)
+	group := router.Group("/users")
 
-	router.GET("/users/:id", controller.GetUserById)
+	group.GET("", controller.GetAllUsers)
 
-	router.POST("/users", controller.CreateUser)
+	group.GET("/:id", controller.GetUserById)
 
-	router.PUT("/users/:id", controller.UpdateUser)
+	group.POST("", controller.CreateUser)
 
-	router.DELETE("/users/:id", controller.DeleteUser)
+	group.PUT("/:id", controller.UpdateUser)
+
+	group.DELETE("/:id", controller.DeleteUser)
+
+	router.POST("/login", controller.Login)
+
+	router.GET("/hello", middleware.JwtAuthFilter, func(c *gin.Context) {
+		c.JSON(http.StatusOK, "hello")
+	})
 
 	router.Run(":9400")
 }
