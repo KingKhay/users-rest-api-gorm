@@ -4,6 +4,7 @@ import (
 	"users-rest-api-gorm/dto"
 	"users-rest-api-gorm/models"
 	"users-rest-api-gorm/repository"
+	"users-rest-api-gorm/utils"
 )
 
 type UserService struct {
@@ -14,8 +15,14 @@ func NewUserService() *UserService {
 	return &UserService{repository: repository.UserRepository{}}
 }
 
-func (s *UserService) CreateUser(theUser models.User) (*models.User, error) {
-	createdUser, err := s.repository.CreateUser(theUser)
+func (s *UserService) CreateUser(theUser *models.User) (*models.User, error) {
+	hashedPassword, err := utils.HashPassword(theUser.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	theUser.Password = hashedPassword
+	createdUser, err := s.repository.CreateUser(*theUser)
 	if err != nil {
 		return nil, err
 	}

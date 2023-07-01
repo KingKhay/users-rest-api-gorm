@@ -30,20 +30,13 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := utils.HashPassword(user.Password)
+	createdUser, err := userService.CreateUser(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to create user"})
 		return
 	}
 
-	user.Password = hashedPassword
-
-	if err = initializers.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "could not save user"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, &dto.UserDTO{ID: user.ID, Name: user.Name, Email: user.Email, Age: user.Age})
+	c.JSON(http.StatusCreated, &dto.UserDTO{ID: createdUser.ID, Name: createdUser.Name, Email: createdUser.Email, Age: createdUser.Age})
 }
 
 func GetAllUsers(c *gin.Context) {
