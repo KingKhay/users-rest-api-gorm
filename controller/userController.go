@@ -9,9 +9,17 @@ import (
 	"users-rest-api-gorm/dto"
 	"users-rest-api-gorm/initializers"
 	"users-rest-api-gorm/models"
+	"users-rest-api-gorm/services"
 	"users-rest-api-gorm/utils"
 )
 
+var (
+	userService *services.UserService
+)
+
+func init() {
+	userService = services.NewUserService()
+}
 func CreateUser(c *gin.Context) {
 	var user models.User
 
@@ -39,10 +47,9 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetAllUsers(c *gin.Context) {
-	var users []models.User
-
-	if err := initializers.DB.Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to fetch users. Try again later"})
+	users, err := userService.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to fetch users"})
 		return
 	}
 
@@ -72,11 +79,13 @@ func GetUserById(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err = initializers.DB.First(&user, userId).Error; err != nil {
+	user, err := userService.GetUserById(userId)
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"message": "user not found"})
+			c.JSON(http.StatusNotFound, gin.H{"message": "no user found with such id"})
+			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to fetch user"})
 		return
 	}
 
@@ -99,15 +108,17 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err = initializers.DB.First(&user, userId).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "no user found with such id"})
+	user, err := userService.UpdateUser(userId, updatedUser)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"message": "no user found with such id"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to update user"})
 		return
 	}
 
-	initializers.DB.Model(&user).Updates(models.User{Name: updatedUser.Name, Age: updatedUser.Age, Email: updatedUser.Email})
-
-	c.JSON(http.StatusOK, dto.UserDTO{ID: updatedUser.ID, Name: updatedUser.Name, Email: updatedUser.Email, Age: updatedUser.Age})
+	c.JSON(http.StatusOK, dto.UserDTO{ID: user.ID, Name: user.Name, Email: user.Email, Age: user.Age})
 }
 
 func DeleteUser(c *gin.Context) {
@@ -118,18 +129,12 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err = initializers.DB.First(&user, userId).Error; err != nil {
+	err = userService.DeleteUser(userId)
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"message": "user not found"})
 			return
 		}
-
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to find user"})
-		return
-	}
-
-	if err = initializers.DB.Delete(&user, userId).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to delete user"})
 		return
 	}
