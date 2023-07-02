@@ -8,11 +8,11 @@ import (
 )
 
 type UserService struct {
-	repository repository.UserRepository
+	repository repository.Repository
 }
 
 func NewUserService() *UserService {
-	return &UserService{repository: repository.UserRepository{}}
+	return &UserService{repository: &repository.UserRepository{}}
 }
 
 func (s *UserService) CreateUser(theUser *models.User) (*models.User, error) {

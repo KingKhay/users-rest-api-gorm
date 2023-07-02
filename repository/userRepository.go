@@ -10,7 +10,7 @@ type Repository interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(userID int) (*models.User, error)
 	CreateUser(user models.User) (*models.User, error)
-	UpdateUser(id int, user models.User) (*models.User, error)
+	UpdateUser(id int, user dto.UpdateUserDTO) (*models.User, error)
 	DeleteUser(userID int) error
 }
 
