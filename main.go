@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"users-rest-api-gorm/controller"
 	"users-rest-api-gorm/initializers"
@@ -35,5 +36,8 @@ func main() {
 		c.JSON(http.StatusOK, "hello")
 	})
 
-	router.Run(":9400")
+	err := router.Run(":9400")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
